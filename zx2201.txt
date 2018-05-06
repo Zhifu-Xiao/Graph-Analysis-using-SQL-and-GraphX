@@ -1,0 +1,24 @@
+UNI: zx2201
+
+import org.apache.spark._
+import org.apache.spark.graphx._
+import org.apache.spark.graphx.lib.ShortestPaths
+val v = sc.textFile("amazon-meta-clean.txt").map(x => (x.split("\t")(0).toLong,(x.split("\t")(1),x.split("\t")(2))) )
+val e = sc.textFile("amazon-data.txt").map(x => Edge(x.split("\t")(0).toLong,x.split("\t")(1).toLong,0L))
+val g = Graph(v,e)
+
+#### Spark code for part 2
+
+val sumEdges = g.edges.count()
+val sumNonzeroVertices = g.degrees.filter(_._1 > 0).count()
+sumEdges.toFloat / sumNonzeroVertices 
+
+#### Spark code for part 3
+val result = ShortestPaths.run(g, Seq(111))
+val shortestPath = result.vertices.filter({case(v, _) => v == 1767}).first._2.get(111)
+
+#### Spark code for part 4
+val graph = GraphLoader.edgeListFile(sc, "amazon-data.txt", true)
+val triCounts = graph.triangleCount().vertices
+val ansNode = triCounts.reduce((a,b) =>  (a._1, a._2 + b._2))
+ansNode._2/3
